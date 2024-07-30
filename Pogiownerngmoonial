@@ -1,0 +1,129 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = game.Players.LocalPlayer:GetMouse()
+local CamlockState = false
+local Prediction = 0.165771
+
+function FindNearestEnemy()
+    local ClosestDistance, ClosestPlayer = math.huge, nil
+    local CenterPosition = Vector2.new(game:GetService("GuiService"):GetScreenResolution().X / 2, game:GetService("GuiService"):GetScreenResolution().Y / 2)
+
+    for _, Player in ipairs(game:GetService("Players"):GetPlayers()) do
+        if Player ~= LocalPlayer then
+            local Character = Player.Character
+            if Character and Character:FindFirstChild("HumanoidRootPart") and Character:FindFirstChild("Humanoid") and Character.Humanoid.Health > 0 then
+                local Position, IsVisibleOnViewport = game:GetService("Workspace").CurrentCamera:WorldToViewportPoint(Character.HumanoidRootPart.Position)
+                if IsVisibleOnViewport then
+                    local Distance = (CenterPosition - Vector2.new(Position.X, Position.Y)).Magnitude
+                    if Distance < ClosestDistance then
+                        ClosestPlayer = Character.HumanoidRootPart
+                        ClosestDistance = Distance
+                    end
+                end
+            end
+        end
+    end
+
+    return ClosestPlayer
+end
+
+local enemy = nil
+
+-- Function to aim the camera at the nearest enemy's HumanoidRootPart
+RunService.Heartbeat:Connect(function()
+    if CamlockState then
+        if enemy then
+            local camera = workspace.CurrentCamera
+            camera.CFrame = CFrame.new(camera.CFrame.Position, enemy.Position + enemy.Velocity * Prediction)
+        end
+    end
+end)
+
+local Wowo = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local ImageButton = Instance.new("ImageButton")
+local UICorner_2 = Instance.new("UICorner")
+local Notification = Instance.new("TextLabel")
+local TargetNotification = Instance.new("TextLabel")
+
+-- Set the aspect ratio
+local aspectRatioWidth = 16
+local aspectRatioHeight = 9
+
+-- Define the base width or height
+local baseWidth = 160  -- Adjust this value as needed
+local baseHeight = (baseWidth / aspectRatioWidth) * aspectRatioHeight
+
+-- Properties:
+Wowo.Name = "Wowo"
+Wowo.Parent = game.CoreGui
+Wowo.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+Frame.Parent = Wowo
+Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- White background
+Frame.BackgroundTransparency = 0.5  -- Semi-transparent to resemble a cloud
+Frame.BorderSizePixel = 0
+Frame.Position = UDim2.new(0.5, -baseWidth/2, 0.5, -baseHeight/2) -- Center the frame
+Frame.Size = UDim2.new(0, baseWidth, 0, baseHeight)
+Frame.Active = true
+Frame.Draggable = true
+
+UICorner.Parent = Frame
+
+ImageButton.Parent = Frame
+ImageButton.BackgroundColor3 = Color3.fromRGB(139, 0, 0)
+ImageButton.BorderSizePixel = 0
+ImageButton.Position = UDim2.new(0.1, 0, 0.1, 0)
+ImageButton.Size = UDim2.new(0.8, 0, 0.8, 0) 
+ImageButton.Image = "rbxassetid://18721909444"
+
+ImageButton.MouseButton1Click:Connect(function()
+    CamlockState = not CamlockState
+    ImageButton.Image = CamlockState and "rbxassetid://18721909444" or "rbxassetid://18721909444"
+    if CamlockState then
+        enemy = FindNearestEnemy()
+        if enemy then
+            TargetNotification.Text = "Kill that guy user: " .. Players:GetPlayerFromCharacter(enemy.Parent).Name
+            TargetNotification.Visible = true
+            delay(5, function()
+                TargetNotification.Visible = false
+            end)
+        end
+    else
+        enemy = nil
+    end
+end)
+
+UICorner_2.Parent = ImageButton
+
+-- Notification
+Notification.Parent = Wowo
+Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Notification.BackgroundTransparency = 0.5
+Notification.Position = UDim2.new(1, -210, 1, -60)  -- Bottom right corner
+Notification.Size = UDim2.new(0, 200, 0, 50)
+Notification.Font = Enum.Font.SourceSansBold
+Notification.Text = "Thank you for using M00nial camlock made by: monologue"
+Notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+Notification.TextScaled = true
+Notification.TextWrapped = true
+
+-- Function to hide the notification after 5 seconds
+delay(5, function()
+    Notification:Destroy()
+end)
+
+-- Target Notification
+TargetNotification.Parent = Wowo
+TargetNotification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+TargetNotification.BackgroundTransparency = 0.5
+TargetNotification.Position = UDim2.new(1, -210, 1, -120)  -- Just above the other notification
+TargetNotification.Size = UDim2.new(0, 200, 0, 50)
+TargetNotification.Font = Enum.Font.SourceSansBold
+TargetNotification.Text = ""
+TargetNotification.TextColor3 = Color3.fromRGB(255, 255, 255)
+TargetNotification.TextScaled = true
+TargetNotification.TextWrapped = true
+TargetNotification.Visible = false
